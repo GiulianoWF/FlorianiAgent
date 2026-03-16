@@ -58,6 +58,9 @@ private:
                                  const std::string& sub_system_prompt,
                                  const std::string& task);
 
+    // Execute tool calls from an LLM response
+    void handle_tool_calls(const std::vector<ToolCall>& tool_calls);
+
     // Get all skills including built-in tools
     std::vector<SkillDef> get_all_tools() const;
 };

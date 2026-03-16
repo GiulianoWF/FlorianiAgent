@@ -134,7 +134,7 @@ std::string Agent::run(const std::string& user_message,
             return "[cancelled]";
         }
 
-        auto result = llm_.chat(messages_, all_tools, on_token, cancel);
+        ILlmClient::CompletionResult result = llm_.chat(messages_, all_tools, on_token, cancel);
 
         if (!result.success) {
             std::string error = "[LLM request failed]";
@@ -161,63 +161,7 @@ std::string Agent::run(const std::string& user_message,
         messages_.push_back(assistant_msg);
         persist(assistant_msg);
 
-        for (const auto& tc : result.tool_calls) {
-            std::cout << "[Agent:" << agent_id_ << "] Executing tool: " << tc.name
-                      << " (id=" << tc.id << ")\n";
-
-            std::string tool_result;
-            json args;
-
-            try {
-                args = json::parse(tc.arguments);
-            } catch (const json::parse_error& e) {
-                tool_result = "Error: invalid arguments JSON: " + std::string(e.what());
-                std::cerr << "[Agent:" << agent_id_ << "] " << tool_result << "\n";
-                Message err_msg{"tool", tool_result, tc.id, {}};
-                messages_.push_back(err_msg);
-                persist(err_msg);
-                continue;
-            }
-
-            // Check for built-in spawn_agent tool
-            if (tc.name == "spawn_agent") {
-                std::string role = args.value("role", "assistant");
-                std::string sub_prompt = args.value("system_prompt", "");
-                std::string task = args.value("task", "");
-                tool_result = spawn_sub_agent(role, sub_prompt, task);
-            } else {
-                // Find the matching external skill
-                const SkillDef* skill = nullptr;
-                for (const auto& s : available_skills_) {
-                    if (s.name == tc.name) {
-                        skill = &s;
-                        break;
-                    }
-                }
-
-                if (!skill) {
-                    tool_result = "Error: unknown tool '" + tc.name + "'";
-                    std::cerr << "[Agent:" << agent_id_ << "] " << tool_result << "\n";
-                } else {
-                    auto exec_result = skills_.execute(*skill, args);
-                    tool_result = exec_result.output;
-
-                    if (monitor_) {
-                        monitor_->record_tool_execution(agent_id_, tc.name,
-                            tc.arguments, tool_result, exec_result.exit_code);
-                    }
-
-                    if (!exec_result.success) {
-                        tool_result = "Error (exit " + std::to_string(exec_result.exit_code)
-                                      + "): " + exec_result.output;
-                    }
-                }
-            }
-
-            Message tool_msg{"tool", tool_result, tc.id, {}};
-            messages_.push_back(tool_msg);
-            persist(tool_msg);
-        }
+        handle_tool_calls(result.tool_calls);
     }
 
     std::string error = "[max tool iterations reached]";
@@ -225,6 +169,66 @@ std::string Agent::run(const std::string& user_message,
     messages_.push_back(err_msg);
     persist(err_msg);
     return error;
+}
+
+void Agent::handle_tool_calls(const std::vector<ToolCall>& tool_calls) {
+    for (const auto& tc : tool_calls) {
+        std::cout << "[Agent:" << agent_id_ << "] Executing tool: " << tc.name
+                  << " (id=" << tc.id << ")\n";
+
+        std::string tool_result;
+        json args;
+
+        try {
+            args = json::parse(tc.arguments);
+        } catch (const json::parse_error& e) {
+            tool_result = "Error: invalid arguments JSON: " + std::string(e.what());
+            std::cerr << "[Agent:" << agent_id_ << "] " << tool_result << "\n";
+            Message err_msg{"tool", tool_result, tc.id, {}};
+            messages_.push_back(err_msg);
+            persist(err_msg);
+            continue;
+        }
+
+        // Check for built-in spawn_agent tool
+        if (tc.name == "spawn_agent") {
+            std::string role = args.value("role", "assistant");
+            std::string sub_prompt = args.value("system_prompt", "");
+            std::string task = args.value("task", "");
+            tool_result = spawn_sub_agent(role, sub_prompt, task);
+        } else {
+            // Find the matching external skill
+            const SkillDef* skill = nullptr;
+            for (const auto& s : available_skills_) {
+                if (s.name == tc.name) {
+                    skill = &s;
+                    break;
+                }
+            }
+
+            if (!skill) {
+                tool_result = "Error: unknown tool '" + tc.name + "'";
+                std::cerr << "[Agent:" << agent_id_ << "] " << tool_result << "\n";
+            } else {
+                auto exec_result = skills_.execute(*skill, args);
+                tool_result = exec_result.output;
+
+                if (monitor_) {
+                    monitor_->record_tool_execution(agent_id_, tc.name,
+                        tc.arguments, tool_result, exec_result.exit_code);
+                }
+
+                if (!exec_result.success) {
+                    tool_result = "Error (exit " + std::to_string(exec_result.exit_code)
+                                  + "): " + exec_result.output;
+                }
+            }
+        }
+
+        Message tool_msg{"tool", tool_result, tc.id, {}};
+        messages_.push_back(tool_msg);
+        persist(tool_msg);
+    }
 }
 
 std::vector<SkillDef> Agent::load_skills(const std::string& skills_dir) {
