@@ -16,6 +16,7 @@ static void print_usage(const char* prog) {
               << "  --backend URL      LLM backend URL (overrides config)\n"
               << "  --config-dir DIR   Config directory (default: ~/.floriani-agent)\n"
               << "  --new-conversation Start a new conversation\n"
+              << "  --approve-commands Require manual approval for every command\n"
               << "  --help             Show this help\n";
 }
 
@@ -24,6 +25,7 @@ int main(int argc, char* argv[]) {
     int port_override = 0;
     std::string backend_override;
     bool new_conversation = false;
+    bool approve_commands = false;
 
     // Default config dir: ~/.floriani-agent
     if (const char* home = std::getenv("HOME")) {
@@ -40,6 +42,8 @@ int main(int argc, char* argv[]) {
             config_dir = argv[++i];
         } else if (arg == "--new-conversation") {
             new_conversation = true;
+        } else if (arg == "--approve-commands") {
+            approve_commands = true;
         } else if (arg == "--help") {
             print_usage(argv[0]);
             return 0;
@@ -80,6 +84,40 @@ int main(int argc, char* argv[]) {
     // Initialize components
     LlmClient llm_client(cfg.llm_endpoint);
     HostSkillExecutor skill_executor;
+    // TODO: make this good.
+    // Primary defense: only these commands can run on the host.
+    // Pipes between allowed commands are permitted (e.g., "ls | grep foo").
+    skill_executor.set_allowed_commands({
+        "ls", "cat", "head", "tail", "wc", "sort", "uniq", "cut", "tr",
+        "grep", "egrep", "fgrep", "rg",
+        "find", "file", "stat", "readlink", "realpath", "basename", "dirname",
+        "tree", "du", "df",
+        "echo", "printf", "date", "pwd", "whoami", "hostname", "uname",
+        "ps", "uptime", "free",
+        "diff", "comm", "md5sum", "sha256sum",
+        "jq", "sed", "awk",
+        "xargs",
+        "bazel",
+        "git",
+        "python3", "python",
+    });
+    // Defense-in-depth: blocklist catches anything that slips through.
+    skill_executor.set_blocked_commands({
+        "rm -rf /",
+        "mkfs",
+        "dd if=",
+    });
+    if (approve_commands) {
+        std::cout << "[floriani-agent] Manual command approval ENABLED\n";
+        skill_executor.set_approval_callback([](const std::string& command) -> bool {
+            std::cout << "\n\033[1;33m[APPROVE?]\033[0m " << command << "\n"
+                      << "  Allow this command? [y/N]: ";
+            std::string input;
+            if (!std::getline(std::cin, input)) return false;
+            return (!input.empty() && (input[0] == 'y' || input[0] == 'Y'));
+        });
+    }
+
     Monitor monitor;
     Agent agent(llm_client, skill_executor, cfg.system_prompt, skills, cfg.max_tool_iterations);
     agent.set_history_store(&history, conv_id);

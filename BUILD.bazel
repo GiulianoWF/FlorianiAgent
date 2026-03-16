@@ -99,3 +99,13 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "host_skill_executor_test",
+    srcs = ["test/host_skill_executor_test.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "//src/skills:host_skill_executor",
+        "@googletest//:gtest_main",
+    ],
+)
