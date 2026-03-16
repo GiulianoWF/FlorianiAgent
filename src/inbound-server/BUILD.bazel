@@ -1,0 +1,20 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "http_server",
+    srcs = ["http_server.cpp"],
+    hdrs = ["http_server.h"],
+    include_prefix = "inbound-server",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:httplib",
+        "//:nlohmann_json",
+        "//:pthread",
+        "//src/agent",
+        "//src/agent:monitor",
+        "//src/agent:pipeline",
+        "//src/llm-link:llm_client",
+        "//src/storage:history_store",
+    ],
+)

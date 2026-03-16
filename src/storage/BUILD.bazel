@@ -1,0 +1,25 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "i_history_store",
+    hdrs = ["i_history_store.h"],
+    include_prefix = "storage",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = ["//src/core:types"],
+)
+
+cc_library(
+    name = "history_store",
+    srcs = ["history_store.cpp"],
+    hdrs = ["history_store.h"],
+    include_prefix = "storage",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":i_history_store",
+        "//:nlohmann_json",
+        "//src/core:types",
+        "@sqlite3",
+    ],
+)

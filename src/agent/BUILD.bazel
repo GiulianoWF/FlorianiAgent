@@ -1,0 +1,42 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "monitor",
+    srcs = ["monitor.cpp"],
+    hdrs = ["monitor.h"],
+    include_prefix = "agent",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = ["//:nlohmann_json"],
+)
+
+cc_library(
+    name = "agent",
+    srcs = ["agent.cpp"],
+    hdrs = ["agent.h"],
+    include_prefix = "agent",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":monitor",
+        "//:nlohmann_json",
+        "//src/core:types",
+        "//src/llm-link:i_llm_client",
+        "//src/skills:skill_executor",
+        "//src/storage:i_history_store",
+    ],
+)
+
+cc_library(
+    name = "pipeline",
+    srcs = ["pipeline.cpp"],
+    hdrs = ["pipeline.h"],
+    include_prefix = "agent",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:nlohmann_json",
+        "//src/core:config",
+        "//src/core:types",
+    ],
+)

@@ -1,0 +1,25 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "i_llm_client",
+    hdrs = ["i_llm_client.h"],
+    include_prefix = "llm-link",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = ["//src/core:types"],
+)
+
+cc_library(
+    name = "llm_client",
+    srcs = ["llm_client.cpp"],
+    hdrs = ["llm_client.h"],
+    include_prefix = "llm-link",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":i_llm_client",
+        "//:curl",
+        "//:nlohmann_json",
+        "//src/core:types",
+    ],
+)

@@ -1,0 +1,75 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+# System libraries
+cc_library(
+    name = "curl",
+    linkopts = ["-lcurl"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "pthread",
+    linkopts = ["-lpthread"],
+    visibility = ["//visibility:public"],
+)
+
+# sqlite3 and yaml-cpp come from BCR (see MODULE.bazel)
+
+# Vendored header-only libraries
+cc_library(
+    name = "nlohmann_json",
+    hdrs = ["include/nlohmann/json.hpp"],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "httplib",
+    hdrs = ["include/httplib/httplib.h"],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+)
+
+# Main binary
+cc_binary(
+    name = "floriani_agent",
+    srcs = ["src/main.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "//src/agent",
+        "//src/agent:monitor",
+        "//src/agent:pipeline",
+        "//src/core:config",
+        "//src/inbound-server:http_server",
+        "//src/llm-link:llm_client",
+        "//src/skills:host_skill_executor",
+        "//src/storage:history_store",
+    ],
+)
+
+# Mock client for testing without a microphone
+cc_binary(
+    name = "mock_client",
+    srcs = ["test/mock_client.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        ":curl",
+        ":nlohmann_json",
+    ],
+)
+
+# Unit tests
+cc_test(
+    name = "agent_test",
+    srcs = ["test/agent_test.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "//src/agent",
+        "//src/llm-link:i_llm_client",
+        "//src/skills:skill_executor",
+        "//src/storage:i_history_store",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,23 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "skill_executor",
+    hdrs = ["skill_executor.h"],
+    include_prefix = "skills",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:nlohmann_json",
+        "//src/core:types",
+    ],
+)
+
+cc_library(
+    name = "host_skill_executor",
+    srcs = ["host_skill_executor.cpp"],
+    hdrs = ["host_skill_executor.h"],
+    include_prefix = "skills",
+    copts = ["-std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [":skill_executor"],
+)
