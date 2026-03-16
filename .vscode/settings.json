@@ -1,0 +1,8 @@
+{
+    "search.followSymlinks": true,
+    "editor.resolveSymlinks": true,
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}",
+        "--header-insertion=never",
+        "--path-mappings=/home/giulianowf/.cache/bazel/_bazel_giulianowf/ad500ce5ac970eb7f5b53012849f9ebd/execroot/_main/bazel-out/k8-fastbuild/bin/src/core/_virtual_includes/types/core=/home/giulianowf/Documents/models/floriani_agent/src/core,/home/giulianowf/.cache/bazel/_bazel_giulianowf/ad500ce5ac970eb7f5b53012849f9ebd/execroot/_main/bazel-out/k8-fastbuild/bin/src/llm-link/_virtual_includes/i_llm_client/llm-link=/home/giulianowf/Documents/models/floriani_agent/src/llm-link,/home/giulianowf/.cache/bazel/_bazel_giulianowf/ad500ce5ac970eb7f5b53012849f9ebd/execroot/_main/bazel-out/k8-fastbuild/bin/src/skills/_virtual_includes/skill_executor/skills=/home/giulianowf/Documents/models/floriani_agent/src/skills,/home/giulianowf/.cache/bazel/_bazel_giulianowf/ad500ce5ac970eb7f5b53012849f9ebd/execroot/_main/bazel-out/k8-fastbuild/bin/src/storage/_virtual_includes/i_history_store/storage=/home/giulianowf/Documents/models/floriani_agent/src/storage,/home/giulianowf/.cache/bazel/_bazel_giulianowf/ad500ce5ac970eb7f5b53012849f9ebd/execroot/_main=/home/giulianowf/Documents/models/floriani_agent",    ]
+}

@@ -1,35 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "agent/agent.h"
-#include "llm-link/i_llm_client.h"
-#include "storage/i_history_store.h"
-#include "skills/skill_executor.h"
-
-// --- Mocks ---
-
-class MockLlmClient : public ILlmClient {
-public:
-    MOCK_METHOD(CompletionResult, chat,
-        (const std::vector<Message>&, const std::vector<SkillDef>&,
-         std::function<void(const std::string&)>, std::atomic<bool>*),
-        (override));
-};
-
-class MockSkillExecutor : public SkillExecutor {
-public:
-    MOCK_METHOD(Result, execute,
-        (const SkillDef&, const nlohmann::json&), (override));
-};
-
-class MockHistoryStore : public IHistoryStore {
-public:
-    MOCK_METHOD(void, add_message,
-        (const std::string&, const Message&), (override));
-    MOCK_METHOD(std::vector<Message>, get_recent,
-        (const std::string&, int), (override));
-};
-
-// --- Tests ---
+#include "mocks/mock_llm_client.h"
+#include "mocks/mock_skill_executor.h"
+#include "mocks/mock_history_store.h"
 
 TEST(AgentTest, SimpleTextResponse) {
     MockLlmClient llm;

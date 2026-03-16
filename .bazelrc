@@ -1,0 +1,5 @@
+# Build tests with debug symbols by default
+test --compilation_mode=dbg
+
+# Debug build preset: bazel build -c dbg //:agent_test
+build:debug --compilation_mode=dbg

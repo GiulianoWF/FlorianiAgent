@@ -60,16 +60,42 @@ cc_binary(
     ],
 )
 
+# Test mocks (shared across test targets)
+cc_library(
+    name = "test_mocks",
+    hdrs = [
+        "test/mocks/mock_llm_client.h",
+        "test/mocks/mock_skill_executor.h",
+        "test/mocks/mock_history_store.h",
+    ],
+    strip_include_prefix = "test",
+    copts = ["-std=c++17"],
+    deps = [
+        "//src/llm-link:i_llm_client",
+        "//src/skills:skill_executor",
+        "//src/storage:i_history_store",
+        "@googletest//:gtest_main",
+    ],
+)
+
 # Unit tests
 cc_test(
     name = "agent_test",
     srcs = ["test/agent_test.cpp"],
     copts = ["-std=c++17"],
     deps = [
+        ":test_mocks",
         "//src/agent",
-        "//src/llm-link:i_llm_client",
-        "//src/skills:skill_executor",
-        "//src/storage:i_history_store",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "pipeline_test",
+    srcs = ["test/pipeline_test.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "//src/agent:pipeline",
         "@googletest//:gtest_main",
     ],
 )

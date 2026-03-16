@@ -1,0 +1,13 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Agent Tests",
+            "type": "shell",
+            "command": "bazel",
+            "args": ["build", "--config=debug", "//:agent_test"],
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}
